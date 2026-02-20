@@ -1,8 +1,7 @@
 const Gallery = require("../models/Gallery");
+const cloudinary = require("../config/cloudinary");
 
-/* =========================
-   Upload Multiple Images
-========================= */
+/* ================= UPLOAD MULTIPLE IMAGES ================= */
 exports.uploadImages = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -12,8 +11,13 @@ exports.uploadImages = async (req, res) => {
     const savedImages = [];
 
     for (let file of req.files) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: "dsc-gallery",
+        resource_type: "image",
+      });
+
       const newImage = new Gallery({
-        image: `/uploads/gallery/${file.filename}`, // clean public path
+        image: result.secure_url,
       });
 
       await newImage.save();
@@ -21,32 +25,31 @@ exports.uploadImages = async (req, res) => {
     }
 
     res.status(201).json(savedImages);
+
   } catch (error) {
-    console.error("UPLOAD ERROR:", error);
+    console.error("GALLERY UPLOAD ERROR:", error);
     res.status(500).json({ message: "Upload failed" });
   }
 };
 
-/* =========================
-   Get All Images
-========================= */
+/* ================= GET ALL IMAGES ================= */
 exports.getImages = async (req, res) => {
   try {
     const images = await Gallery.find().sort({ createdAt: -1 });
     res.json(images);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Failed to fetch images" });
   }
 };
 
-/* =========================
-   Delete Image
-========================= */
+/* ================= DELETE IMAGE ================= */
 exports.deleteImage = async (req, res) => {
   try {
     await Gallery.findByIdAndDelete(req.params.id);
     res.json({ message: "Image deleted successfully" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Delete failed" });
   }
 };

@@ -1,55 +1,31 @@
-const Gallery = require("../models/Gallery");
-const cloudinary = require("../config/cloudinary");
+const express = require("express");
+const router = express.Router();
+const multer = require("multer");
+const path = require("path");
 
-/* ================= UPLOAD MULTIPLE IMAGES ================= */
-exports.uploadImages = async (req, res) => {
-  try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: "No files uploaded" });
-    }
+const {
+  uploadImages,
+  getImages,
+  deleteImage,
+} = require("../controllers/galleryController");
 
-    const savedImages = [];
+/* ================= MULTER STORAGE ================= */
 
-    for (let file of req.files) {
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: "dsc-gallery",
-        resource_type: "image",
-      });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/gallery/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
 
-      const newImage = new Gallery({
-        image: result.secure_url,
-      });
+const upload = multer({ storage });
 
-      await newImage.save();
-      savedImages.push(newImage);
-    }
+/* ================= ROUTES ================= */
 
-    res.status(201).json(savedImages);
+router.post("/upload", upload.array("images", 50), uploadImages);
+router.get("/", getImages);
+router.delete("/:id", deleteImage);
 
-  } catch (error) {
-    console.error("GALLERY UPLOAD ERROR:", error);
-    res.status(500).json({ message: "Upload failed" });
-  }
-};
-
-/* ================= GET ALL IMAGES ================= */
-exports.getImages = async (req, res) => {
-  try {
-    const images = await Gallery.find().sort({ createdAt: -1 });
-    res.json(images);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to fetch images" });
-  }
-};
-
-/* ================= DELETE IMAGE ================= */
-exports.deleteImage = async (req, res) => {
-  try {
-    await Gallery.findByIdAndDelete(req.params.id);
-    res.json({ message: "Image deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Delete failed" });
-  }
-};
+module.exports = router;
