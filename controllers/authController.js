@@ -13,6 +13,10 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email });
 
+    console.log("Connected DB:",mongoose.connection.name);
+    console.log("User found:",user);
+
+
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
