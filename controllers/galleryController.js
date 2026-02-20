@@ -1,47 +1,52 @@
 const Gallery = require("../models/Gallery");
 
-/* ================= UPLOAD IMAGE ================= */
-exports.uploadImage = async (req, res) => {
+/* =========================
+   Upload Multiple Images
+========================= */
+exports.uploadImages = async (req, res) => {
   try {
-
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
     }
 
-    const newImage = new Gallery({
-      image: req.file.path,
-    });
+    const savedImages = [];
 
-    await newImage.save();
+    for (let file of req.files) {
+      const newImage = new Gallery({
+        image: `/uploads/gallery/${file.filename}`, // clean public path
+      });
 
-    res.status(200).json({
-      message: "Image uploaded successfully",
-    });
+      await newImage.save();
+      savedImages.push(newImage);
+    }
 
+    res.status(201).json(savedImages);
   } catch (error) {
     console.error("UPLOAD ERROR:", error);
     res.status(500).json({ message: "Upload failed" });
   }
 };
 
-/* ================= GET ALL IMAGES ================= */
+/* =========================
+   Get All Images
+========================= */
 exports.getImages = async (req, res) => {
   try {
     const images = await Gallery.find().sort({ createdAt: -1 });
     res.json(images);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Failed to fetch images" });
   }
 };
 
-/* ================= DELETE IMAGE ================= */
+/* =========================
+   Delete Image
+========================= */
 exports.deleteImage = async (req, res) => {
   try {
     await Gallery.findByIdAndDelete(req.params.id);
     res.json({ message: "Image deleted successfully" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Delete failed" });
   }
 };

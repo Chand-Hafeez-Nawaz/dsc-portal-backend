@@ -1,4 +1,5 @@
 const Event = require("../models/Event");
+const cloudinary = require("../config/cloudinary"); // ✅ add this
 
 // CREATE EVENT
 const createEvent = async (req, res) => {
@@ -9,11 +10,25 @@ const createEvent = async (req, res) => {
       return res.status(400).json({ message: "All fields required" });
     }
 
+    let brochureUrl = null;
+
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+  folder: "dsc-events",
+  resource_type: "auto",
+  use_filename: true,       // ✅ keeps original name
+  unique_filename: false    // ✅ prevents random name
+});   // ✅ important fix
+
+
+      brochureUrl = result.secure_url; // ✅ store cloudinary URL
+    }
+
     const newEvent = new Event({
       title,
       description,
       date,
-      image: req.file ? req.file.path : null,
+      image: brochureUrl, // ✅ updated
     });
 
     await newEvent.save();
@@ -58,7 +73,12 @@ const updateEvent = async (req, res) => {
     };
 
     if (req.file) {
-      updatedData.image = req.file.path;
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "dsc-events",
+        resource_type: "auto",   // ✅ important fix
+      });
+
+      updatedData.image = result.secure_url; // ✅ updated
     }
 
     await Event.findByIdAndUpdate(req.params.id, updatedData);
