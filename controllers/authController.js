@@ -3,9 +3,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 // ================= LOGIN =================
-const User = require("./models/User");
-const bcrypt = require("bcryptjs");
-
 mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
     console.log("MongoDB Atlas Connected");
