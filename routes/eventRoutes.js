@@ -9,9 +9,9 @@ const cloudinary = require("cloudinary").v2;
    CLOUDINARY CONFIG
 ================================ */
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
+  api_key: process.env.CLOUDINARY_API_KEY || "",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "",
 });
 
 /* ================================
@@ -19,9 +19,11 @@ cloudinary.config({
 ================================ */
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: "dsc-events",
-    allowed_formats: ["jpg", "png", "jpeg", "pdf"],
+  params: async (req, file) => {
+    return {
+      folder: "dsc-events",
+      resource_type: "auto",
+    };
   },
 });
 
@@ -32,7 +34,12 @@ const upload = multer({ storage });
 ================================ */
 router.post("/", upload.single("brochure"), async (req, res) => {
   try {
+
     const { title, description, date } = req.body;
+
+    if (!title || !description ||  !date) {
+      return res.status(400).json({ message: "All fields required" });
+    }
 
     const newEvent = new Event({
       title,
@@ -43,7 +50,9 @@ router.post("/", upload.single("brochure"), async (req, res) => {
 
     await newEvent.save();
     res.status(201).json(newEvent);
+
   } catch (error) {
+    console.error("UPLOAD ERROR:", error);
     res.status(500).json({ message: "Event creation failed" });
   }
 });
@@ -56,6 +65,7 @@ router.get("/", async (req, res) => {
     const events = await Event.find().sort({ createdAt: -1 });
     res.json(events);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -65,6 +75,8 @@ router.get("/", async (req, res) => {
 ================================ */
 router.put("/:id", upload.single("brochure"), async (req, res) => {
   try {
+    console.log("UPDATE FILE:", req.file);
+
     const { title, description, date } = req.body;
 
     const updatedData = {
@@ -84,7 +96,9 @@ router.put("/:id", upload.single("brochure"), async (req, res) => {
     );
 
     res.json(updatedEvent);
+
   } catch (error) {
+    console.error("UPDATE ERROR:", error);
     res.status(500).json({ message: "Event update failed" });
   }
 });
@@ -97,6 +111,7 @@ router.delete("/:id", async (req, res) => {
     await Event.findByIdAndDelete(req.params.id);
     res.json({ message: "Event Deleted Successfully" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 });
