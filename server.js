@@ -24,9 +24,31 @@ app.use("/uploads", express.static("uploads"));
 /* ================= MONGODB CONNECTION ================= */
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Atlas Connected"))
-  .catch((err) => {
-    console.error("❌ MongoDB Error:", err);
+  .then(async () => {
+    console.log("MongoDB Atlas Connected");
+
+    // Create default admin if not exists
+    const Admin = require("./models/Admin");
+    const bcrypt = require("bcryptjs");
+
+    const existing = await Admin.findOne({ email: "admin@dsc.in" });
+
+    if (!existing) {
+      const hashed = await bcrypt.hash("admin123", 10);
+
+      await Admin.create({
+        email: "admin@dsc.in",
+        password: hashed,
+      });
+
+      console.log("Default Admin Created");
+    } else {
+      console.log("Admin Already Exists");
+    }
+
+  })
+  .catch(err => {
+    console.error("MongoDB Error:", err);
     process.exit(1);
   });
 
