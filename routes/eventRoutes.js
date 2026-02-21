@@ -17,17 +17,16 @@ cloudinary.config({
 /* ================================
    MULTER + CLOUDINARY STORAGE
 ================================ */
+const path = require("path");
+
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
-    const originalName = file.originalname.split(".")[0];
-
     return {
       folder: "dsc-events",
-      resource_type: "auto",
-      public_id: originalName,
-      use_filename: true,
-      unique_filename: false,
+      resource_type: "raw",
+      public_id: path.parse(file.originalname).name, // filename without extension
+      format: path.extname(file.originalname).replace(".", ""), // ⭐ this keeps extension
     };
   },
 });

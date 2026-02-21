@@ -74,11 +74,15 @@ const updateEvent = async (req, res) => {
 
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "dsc-events",
-        resource_type: "auto",   // ✅ important fix
-      });
+  folder: "dsc-events",
+  resource_type: "raw",
+  use_filename: true,
+  unique_filename: false,
+});
 
-      updatedData.image = result.secure_url; // ✅ updated
+const fileUrl = result.secure_url + "." + result.format;
+
+updatedData.brochure = fileUrl; // ✅ updated
     }
 
     await Event.findByIdAndUpdate(req.params.id, updatedData);
