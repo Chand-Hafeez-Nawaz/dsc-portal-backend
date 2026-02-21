@@ -18,16 +18,13 @@ cloudinary.config({
    MULTER + CLOUDINARY STORAGE
 ================================ */
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: async (req, file) => {
-    return {
-      folder: "dsc-events",
-      resource_type: "raw",
-      use_filename: true,
-      unique_filename: false,
-      format: file.originalname.split(".").pop(), // keep extension
-    };
-  },
+  cloudinary,
+  params: async (req, file) => ({
+    folder: "dsc-events",
+    resource_type: "image",  // ✅ IMPORTANT
+    use_filename: true,
+    unique_filename: true,
+  }),
 });
 
 const upload = multer({ storage });
