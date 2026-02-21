@@ -4,6 +4,7 @@ const cloudinary = require("../config/cloudinary");
 /* ================= UPLOAD MULTIPLE IMAGES ================= */
 exports.uploadImages = async (req, res) => {
   try {
+    console.log("Files:",req.files);
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: "No files uploaded" });
     }
