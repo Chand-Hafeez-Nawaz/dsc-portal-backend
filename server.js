@@ -8,6 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const galleryRoutes = require("./routes/galleryRoutes");
+const noticeRoutes = require("./routes/noticeRoutes");
 
 const app = express();
 
@@ -64,7 +65,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/gallery", galleryRoutes);
-
+app.use("/api/notices", noticeRoutes);
 /* ================= SERVER ================= */
 
 const PORT = process.env.PORT || 5000;
