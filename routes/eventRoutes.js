@@ -21,7 +21,7 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => ({
     folder: "dsc-events",
-    resource_type: "image",  // ✅ IMPORTANT
+    resource_type: "auto",  // ✅ IMPORTANT
     use_filename: true,
     unique_filename: true,
   }),
