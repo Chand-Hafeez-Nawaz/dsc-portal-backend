@@ -1,38 +1,27 @@
 const express = require("express");
 const router = express.Router();
-const Notice = require("../models/Notice");
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("cloudinary").v2;
+const cloudinary = require("../config/cloudinary");
+const Notice = require("../models/Notice");
 
-/* Cloudinary config */
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+/* ================= CLOUDINARY STORAGE ================= */
 
-/* Storage */
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => ({
     folder: "dsc-notices",
-    resource_type: "raw", // important for docs
-    use_filename: true,
-    unique_filename: true,
+    resource_type: "raw",
   }),
 });
 
 const upload = multer({ storage });
 
-/* Create Notice */
+/* ================= CREATE NOTICE ================= */
+
 router.post("/", upload.single("document"), async (req, res) => {
   try {
     const { title } = req.body;
-
-    if (!title || !req.file) {
-      return res.status(400).json({ message: "All fields required" });
-    }
 
     const newNotice = new Notice({
       title,
@@ -40,29 +29,57 @@ router.post("/", upload.single("document"), async (req, res) => {
     });
 
     await newNotice.save();
-    res.status(201).json(newNotice);
+    res.json(newNotice);
   } catch (error) {
+    console.error("Create Notice Error:", error);
     res.status(500).json({ message: "Notice creation failed" });
   }
 });
 
-/* Get Notices */
+/* ================= GET ALL NOTICES ================= */
+
 router.get("/", async (req, res) => {
   try {
     const notices = await Notice.find().sort({ createdAt: -1 });
     res.json(notices);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Fetch failed" });
   }
 });
 
-/* Delete Notice */
+/* ================= UPDATE NOTICE ================= */
+
+router.put("/:id", upload.single("document"), async (req, res) => {
+  try {
+    const { title } = req.body;
+
+    const updateData = { title };
+
+    if (req.file) {
+      updateData.document = req.file.path;
+    }
+
+    const updated = await Notice.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Update Notice Error:", error);
+    res.status(500).json({ message: "Update failed" });
+  }
+});
+
+/* ================= DELETE NOTICE ================= */
+
 router.delete("/:id", async (req, res) => {
   try {
     await Notice.findByIdAndDelete(req.params.id);
-    res.json({ message: "Notice Deleted" });
+    res.json({ message: "Deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Delete failed" });
   }
 });
 
