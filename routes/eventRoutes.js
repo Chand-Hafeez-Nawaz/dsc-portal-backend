@@ -45,7 +45,7 @@ router.post("/", upload.single("brochure"), async (req, res) => {
       title,
       description,
       date,
-      brochure: req.file ? req.file.secure_url : "",
+      brochure: req.file ? req.file.path : "",
     });
 
     await newEvent.save();
