@@ -22,7 +22,10 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     return {
       folder: "dsc-events",
-      resource_type: "auto",
+      resource_type: "raw",
+      use_filename: true,
+      unique_filename: false,
+      format: file.originalname.split(".").pop(), // keep extension
     };
   },
 });
